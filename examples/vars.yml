@@ -7,7 +7,7 @@
 #
 # If you've deployed using the wrong domain, you'll have to run the Uninstalling step,
 # because you can't change the Domain after deployment.
-matrix_domain: example.com
+matrix_domain: clsim.com
 
 # The Matrix homeserver software to install.
 # See:
@@ -21,7 +21,7 @@ matrix_homeserver_implementation: synapse
 
 # A secret used as a base, for generating various other secrets.
 # You can put any string here, but generating a strong one is preferred. You can create one with a command like `pwgen -s 64 1`.
-matrix_homeserver_generic_secret_key: ''
+matrix_homeserver_generic_secret_key: 'LockMartin22@@'
 
 # By default, the playbook manages its own Traefik (https://doc.traefik.io/traefik/) reverse-proxy server.
 # It will retrieve SSL certificates for you on-demand and forward requests to all other components.
@@ -43,7 +43,7 @@ matrix_playbook_reverse_proxy_type: playbook-managed-traefik
 # People managing Docker themselves and running an older Docker version will need additional configuration.
 #
 # Learn more in `docs/configuring-ipv6.md`.
-devture_systemd_docker_base_ipv6_enabled: true
+devture_systemd_docker_base_ipv6_enabled: false
 
 # A Postgres password to use for the superuser Postgres user (called `matrix` by default).
 #
@@ -51,7 +51,7 @@ devture_systemd_docker_base_ipv6_enabled: true
 #
 # Changing this value subsequently requires manual work.
 # The value used here must be shorter than 100 characters.
-postgres_connection_password: ''
+postgres_connection_password: 'LockMartin22@@'
 
 # By default, we configure coturn's external IP address using the value specified for `ansible_host` in your `inventory/hosts` file.
 # If this value is an external IP address, you can skip this section.

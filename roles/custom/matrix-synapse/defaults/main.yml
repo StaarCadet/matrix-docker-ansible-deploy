@@ -1430,7 +1430,7 @@ matrix_synapse_ext_synapse_http_antispam_config_authorization: ''
 # This controls if the module will ping the consumer or not for ease of troubleshooting. This defaults
 # to enabled to help assure users that the connection is working.
 # Due to that its only a single log line per worker per startup this default is deemed acceptable.
-matrix_synapse_ext_synapse_http_antispam_config_do_ping: true
+matrix_synapse_ext_synapse_http_antispam_config_do_ping: false
 # This controls what callbacks are activated. This list is fully dependent on what consumer is in play.
 # And what capabilities said consumer should or shouldn't have. There are also performance implications
 # to these choices.

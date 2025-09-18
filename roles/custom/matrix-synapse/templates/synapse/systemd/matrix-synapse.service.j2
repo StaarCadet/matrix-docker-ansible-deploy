@@ -48,11 +48,11 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
 			{% if matrix_synapse_manhole_enabled and matrix_synapse_container_manhole_api_host_bind_port %}
 			-p {{ matrix_synapse_container_manhole_api_host_bind_port }}:9000 \
 			{% endif %}
-			--mount type=bind,src={{ matrix_synapse_config_dir_path }},dst=/data,ro \
-			--mount type=bind,src={{ matrix_synapse_storage_path }},dst=/matrix-media-store-parent,bind-propagation=slave \
+			--mount type=bind,src={{ matrix_synapse_config_dir_path }},dst=/data,ro,Z \
+			--mount type=bind,src={{ matrix_synapse_storage_path }},dst=/matrix-media-store-parent,bind-propagation=slave,Z \
 			--label-file={{ matrix_synapse_base_path }}/labels \
 			{% for volume in matrix_synapse_container_additional_volumes %}
-			--mount type={{ volume.type | default('bind' if '/' in volume.src else 'volume') }},src={{ volume.src }},dst={{ volume.dst }}{{ (',' + volume.options) if volume.options else '' }} \
+			--mount type={{ volume.type | default('bind' if '/' in volume.src else 'volume') }},src={{ volume.src }},dst={{ volume.dst }}{{ (',' + volume.options) if volume.options else '' }},Z \
 			{% endfor %}
 			{% for arg in matrix_synapse_container_arguments %}
 			{{ arg }} \

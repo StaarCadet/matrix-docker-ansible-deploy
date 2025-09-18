@@ -114,6 +114,14 @@
     - {src: "{{ matrix_client_element_embedded_pages_home_path }}", name: "home.html"}
   when: "item.src is none"
 
+- name: Ensure host directory for Element Nginx default.conf exists
+  ansible.builtin.file:
+    path: "{{ matrix_client_element_data_path }}/nginx-conf-d"
+    state: directory
+    owner: "{{ matrix_user_uid }}"
+    group: "{{ matrix_user_gid }}"
+    mode: "0755"
+
 - name: Ensure Element Web container network is created
   community.general.docker_network:
     enable_ipv6: "{{ devture_systemd_docker_base_ipv6_enabled }}"

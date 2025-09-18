@@ -114,7 +114,7 @@
       --name=matrix-config
       --user={{ matrix_synapse_uid }}:{{ matrix_synapse_gid }}
       --cap-drop=ALL
-      --mount type=bind,src={{ matrix_synapse_config_dir_path }},dst=/data
+      --mount type=bind,src={{ matrix_synapse_config_dir_path }},dst=/data,Z
       -e SYNAPSE_CONFIG_PATH=/data/homeserver.yaml
       -e SYNAPSE_SERVER_NAME={{ matrix_server_fqn_matrix }}
       -e SYNAPSE_REPORT_STATS=no

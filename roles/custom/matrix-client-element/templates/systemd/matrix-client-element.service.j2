@@ -23,7 +23,6 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
 			--log-driver=none \
 			--user={{ matrix_user_uid }}:{{ matrix_user_gid }} \
 			--cap-drop=ALL \
-			--read-only \
 			--network={{ matrix_client_element_container_network }} \
 			{% if matrix_client_element_container_http_host_bind_port %}
 			-p {{ matrix_client_element_container_http_host_bind_port }}:{{ matrix_client_element_container_port }} \
@@ -34,16 +33,16 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
 			--tmpfs=/var/cache/nginx:rw,mode=777 \
 			--tmpfs=/var/run:rw,mode=777 \
 			--tmpfs=/tmp/element-web-config:rw,mode=777 \
-			--tmpfs=/etc/nginx/conf.d:rw,mode=777,uid={{ matrix_user_uid }} \
-			--mount type=bind,src={{ matrix_client_element_data_path }}/config.json,dst=/app/config.json,ro \
-			--mount type=bind,src={{ matrix_client_element_data_path }}/config.json,dst=/app/config.{{ matrix_server_fqn_element }}.json,ro \
+			--mount type=bind,src={{ matrix_client_element_data_path }}/nginx-conf-d,dst=/etc/nginx/conf.d,Z \
+			--mount type=bind,src={{ matrix_client_element_data_path }}/config.json,dst=/app/config.json,ro,Z \
+			--mount type=bind,src={{ matrix_client_element_data_path }}/config.json,dst=/app/config.{{ matrix_server_fqn_element }}.json,ro,Z \
 			{% if matrix_client_element_location_sharing_enabled %}
-			--mount type=bind,src={{ matrix_client_element_data_path }}/map_style.json,dst=/app/map_style.json,ro \
+			--mount type=bind,src={{ matrix_client_element_data_path }}/map_style.json,dst=/app/map_style.json,ro,Z \
 			{% endif %}
 			{% if matrix_client_element_embedded_pages_home_path is not none %}
-			--mount type=bind,src={{ matrix_client_element_data_path }}/home.html,dst=/app/home.html,ro \
+			--mount type=bind,src={{ matrix_client_element_data_path }}/home.html,dst=/app/home.html,ro,Z \
 			{% endif %}
-			--mount type=bind,src={{ matrix_client_element_data_path }}/welcome.html,dst=/app/welcome.html,ro \
+			--mount type=bind,src={{ matrix_client_element_data_path }}/welcome.html,dst=/app/welcome.html,ro,Z \
 			{% if matrix_client_element_container_healthcheck_cmd %}
 			--health-cmd="{{ matrix_client_element_container_healthcheck_cmd }}" \
 			{% endif %}
