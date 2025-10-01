@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2023 - 2024 Slavi Pantaleev
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Fail if required Traefik certs dumper settings not defined
+  ansible.builtin.fail:
+    msg: >-
+      You need to define a required configuration setting (`{{ item }}`).
+  when: "lookup('vars', item, default='') | string | length == 0"
+  with_items:
+    - traefik_certs_dumper_uid
+    - traefik_certs_dumper_gid
+    - traefik_certs_dumper_ssl_dir_path

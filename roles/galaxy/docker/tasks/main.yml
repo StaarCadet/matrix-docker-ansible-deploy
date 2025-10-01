@@ -1,0 +1,79 @@
+---
+- name: Load OS-specific vars.
+  include_vars: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      files:
+        - '{{ ansible_distribution }}.yml'
+        - '{{ ansible_os_family }}.yml'
+        - main.yml
+      paths:
+        - 'vars'
+
+- include_tasks: setup-RedHat.yml
+  when: ansible_os_family == 'RedHat'
+
+- name: Install Podman packages.
+  package:
+    name: "{{ podman_packages }}"
+    state: "{{ podman_packages_state }}"
+    allow_downgrade: true
+  notify: restart podman
+  ignore_errors: "{{ ansible_check_mode }}"
+  when: ansible_os_family == 'RedHat'
+
+- name: Install Podman Compose package.
+  package:
+    name: "{{ podman_compose_package }}"
+    state: "{{ podman_compose_package_state }}"
+    allow_downgrade: true
+  notify: restart podman
+  ignore_errors: "{{ ansible_check_mode }}"
+  when: podman_install_compose_plugin | bool and ansible_os_family == 'RedHat'
+
+- name: Ensure /etc/containers/ directory exists.
+  file:
+    path: /etc/containers
+    state: directory
+    mode: 0755
+  when: podman_daemon_options is defined and podman_daemon_options | length > 0
+
+- name: Configure Podman daemon options.
+  copy:
+    content: "{{ podman_daemon_options | to_nice_json }}"
+    dest: /etc/containers/containers.conf
+    mode: 0644
+  when: podman_daemon_options is defined and podman_daemon_options | length > 0
+  notify: restart podman
+
+- name: Ensure Podman service is started and enabled at boot.
+  service:
+    name: podman
+    state: "{{ podman_service_state }}"
+    enabled: "{{ podman_service_enabled }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+  when: podman_service_manage | bool
+
+- name: Ensure handlers are notified now to avoid conflicts.
+  meta: flush_handlers
+
+- include_tasks: podman-compose.yml
+  when: podman_install_compose | bool
+
+- name: Get podman group info using getent.
+  getent:
+    database: group
+    key: podman
+    split: ':'
+  when: podman_users | length > 0
+
+- name: Check if there are any users to add to the podman group.
+  set_fact:
+    at_least_one_user_to_modify: true
+  when:
+    - podman_users | length > 0
+    - item not in ansible_facts.getent_group["podman"][2]
+  with_items: "{{ podman_users }}"
+
+- include_tasks: podman-users.yml
+  when: at_least_one_user_to_modify is defined

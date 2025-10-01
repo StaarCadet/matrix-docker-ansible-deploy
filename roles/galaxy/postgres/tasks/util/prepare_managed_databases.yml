@@ -1,0 +1,40 @@
+---
+- name: Ensure Postgres is started
+  ansible.builtin.service:
+    name: "{{ postgres_identifier }}"
+    state: started
+    daemon_reload: true
+  register: postgres_ensure_started_result
+
+- name: Wait a bit, so that Postgres can start
+  when: postgres_ensure_started_result.changed | bool
+  ansible.builtin.wait_for:
+    timeout: "{{ postgres_managed_databases_postgres_start_wait_timeout_seconds }}"
+  delegate_to: 127.0.0.1
+  become: false
+
+- name: Check Postgres container network (Podman, first network only)
+  ansible.builtin.command: >
+    {{ devture_systemd_docker_base_host_command_docker }}
+    container inspect {{ postgres_identifier }}
+    --format '{{ "{{ range $name, $conf := .NetworkSettings.Networks }}{{$conf.NetworkID}}{{break}}{{end }}" }}'
+  register: postgres_container_network_check_result
+  changed_when: false
+
+- name: Set Postgres container network to use for preparing databases
+  ansible.builtin.set_fact:
+    postgres_container_network_for_preparing_databases: "{{ postgres_container_network_check_result.stdout }}"
+
+- name: Prepare managed Postgres database
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/util/prepare_managed_database.yml"
+  with_items: "{{ postgres_managed_databases }}"
+  loop_control:
+    loop_var: managed_db
+  # Suppress logging to avoid dumping the credentials to the shell
+  no_log: true
+
+- name: Ensure Postgres is stopped, if it originally was and if we are configured to do it
+  when: postgres_systemd_service_stop_originally_stopped_after_preparation | bool and postgres_ensure_started_result.changed | bool
+  ansible.builtin.service:
+    name: "{{ postgres_identifier }}"
+    state: stopped

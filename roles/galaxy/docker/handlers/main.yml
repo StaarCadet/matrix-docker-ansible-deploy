@@ -1,0 +1,7 @@
+---
+- name: restart podman
+  service:
+    name: podman
+    state: "{{ podman_restart_handler_state }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+  when: podman_service_manage | bool

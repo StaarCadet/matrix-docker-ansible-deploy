@@ -1,0 +1,103 @@
+---
+- ansible.builtin.import_tasks: "{{ role_path }}/tasks/migrate_postgres_data_directory.yml"
+
+- ansible.builtin.import_tasks: "{{ role_path }}/tasks/detect_existing_postgres_version.yml"
+
+- ansible.builtin.set_fact:
+    postgres_container_image_to_use: "{{ postgres_container_image_latest if postgres_detected_version_corresponding_docker_image == '' else postgres_detected_version_corresponding_docker_image }}"
+
+- name: Abort if on an unsupported Postgres version
+  ansible.builtin.fail:
+    msg: "You're on Postgres {{ postgres_detected_version }}, which is no longer supported. To upgrade, see docs/maintenance-postgres.md"
+  when: "postgres_detected_version.startswith('9.')"
+
+- name: Inject warning if on an old version of Postgres
+  ansible.builtin.set_fact:
+    devture_playbook_runtime_messages_list: |
+      {{
+        devture_playbook_runtime_messages_list | default([]) +
+        [
+          "NOTE: Your setup is on an old Postgres version (" + postgres_container_image_to_use + "), while " + postgres_container_image_latest + " is supported. You can upgrade using --tags=upgrade-postgres"
+        ]
+      }}
+  when: "postgres_container_image_to_use != postgres_container_image_latest"
+
+# Instead of pulling, check if the image exists
+- name: Check if Postgres container image exists
+  containers.podman.podman_image_info:
+    name: "{{ postgres_container_image_to_use }}"
+  register: postgres_image_info
+  retries: "{{ devture_playbook_help_container_retries_count }}"
+  delay: "{{ devture_playbook_help_container_retries_delay }}"
+  until: postgres_image_info | length > 0
+
+- name: Ensure Postgres paths exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0700"
+    owner: "{{ postgres_uid }}"
+    group: "{{ postgres_gid }}"
+  with_items:
+    - "{{ postgres_base_path }}"
+    - "{{ postgres_data_path }}"
+    - "{{ postgres_bin_path }}"
+
+- name: Ensure Postgres environment variables file created
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/{{ item }}.j2"
+    dest: "{{ postgres_base_path }}/{{ item }}"
+    owner: "{{ postgres_uid }}"
+    group: "{{ postgres_gid }}"
+    mode: "0640"
+  with_items:
+    - "env-postgres-psql"
+    - "env-postgres-server"
+
+- name: Ensure Postgres scripts created
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/bin/{{ item }}.j2"
+    dest: "{{ postgres_bin_path }}/{{ item }}"
+    mode: "0755"
+  with_items:
+    - cli
+    - cli-non-interactive
+    - dump-all
+
+- name: Ensure Postgres container network is created
+  containers.podman.podman_network:
+    name: "{{ postgres_container_network }}"
+    driver: bridge
+    ipv6: "{{ devture_systemd_podman_base_ipv6_enabled | default(false) }}"
+    opt: "{{ devture_systemd_podman_base_container_networks_driver_options | default({}) }}"
+
+- name: Ensure Postgres systemd service installed
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/systemd/postgres.service.j2"
+    dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ postgres_identifier }}.service"
+    mode: "0644"
+  register: postgres_systemd_service_result
+
+- name: Ensure managed Postgres databases prepared
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/util/prepare_managed_databases.yml"
+    apply:
+      tags:
+        - always
+  when: "postgres_managed_databases|length > 0"
+
+- name: Check existence of Postgres backup data path
+  ansible.builtin.stat:
+    path: "{{ postgres_data_path }}-auto-upgrade-backup"
+  register: postgres_data_backup_path_stat
+
+- name: Inject warning if backup data remains
+  ansible.builtin.set_fact:
+    devture_playbook_runtime_messages_list: |
+      {{
+        devture_playbook_runtime_messages_list | default([]) +
+        [
+          "NOTE: You have some Postgres backup data in `" + postgres_data_path + "-auto-upgrade-backup`, which was created during the last major Postgres update you ran. If your setup works well after this upgrade, feel free to delete this whole directory."
+        ]
+      }}
+  when: "postgres_data_backup_path_stat.stat.exists"

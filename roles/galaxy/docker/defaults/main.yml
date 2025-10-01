@@ -1,0 +1,13 @@
+---
+# Service options.
+podman_service_manage: true
+podman_service_state: started
+podman_service_enabled: true
+podman_restart_handler_state: restarted
+
+
+# A list of users who will be added to the podman group.
+podman_users: []
+
+# podman daemon options as a dict
+podman_daemon_options: {}

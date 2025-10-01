@@ -1,0 +1,24 @@
+---
+# Used only for Fedora/Rocky (RedHat OS-Family)
+# https://docs.docker.com/engine/install/fedora/#uninstall-old-versions
+# https://docs.docker.com/engine/install/centos/#uninstall-old-versions
+
+podman_packages:
+  - podman
+  - podman-docker
+  - buildah
+  - skopeo
+  - podman-compose
+
+podman_compose_package: podman-compose
+
+podman_packages_state: present
+podman_compose_package_state: present
+
+podman_install_compose_plugin: true
+podman_install_compose: true
+
+podman_service_state: started
+podman_service_enabled: true
+
+podman_service_manage: true

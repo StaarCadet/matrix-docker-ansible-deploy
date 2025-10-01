@@ -1,0 +1,140 @@
+# SPDX-FileCopyrightText: 2023 - 2025 Slavi Pantaleev
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+# Project source code URL: https://github.com/Tecnativa/docker-socket-proxy
+
+container_socket_proxy_enabled: true
+
+container_socket_proxy_identifier: container-socket-proxy
+container_socket_proxy_base_path: "/{{ container_socket_proxy_identifier }}"
+
+# renovate: datasource=docker depName=ghcr.io/tecnativa/docker-socket-proxy versioning=semver
+container_socket_proxy_version: 0.3.0
+
+container_socket_proxy_uid: ''
+container_socket_proxy_gid: ''
+
+container_socket_proxy_container_image: "{{ container_socket_proxy_container_image_registry_prefix }}tecnativa/docker-socket-proxy:{{ container_socket_proxy_container_image_tag }}"
+container_socket_proxy_container_image_tag: "{{ container_socket_proxy_version }}"
+container_socket_proxy_container_image_force_pull: "{{ container_socket_proxy_container_image_tag.endswith(':latest') or container_socket_proxy_container_image_tag.endswith(':nightly') }}"
+container_socket_proxy_container_image_registry_prefix: "{{ container_socket_proxy_container_image_registry_prefix_upstream }}"
+container_socket_proxy_container_image_registry_prefix_upstream: "{{ container_socket_proxy_container_image_registry_prefix_upstream_default }}"
+container_socket_proxy_container_image_registry_prefix_upstream_default: ghcr.io/
+
+# The base container network. It will be auto-created by this role if it doesn't exist already.
+container_socket_proxy_container_network: "{{ container_socket_proxy_identifier }}"
+
+# A list of additional container networks that the container would be connected to.
+# The role does not create these networks, so make sure they already exist.
+container_socket_proxy_container_additional_networks: "{{ container_socket_proxy_container_additional_networks_auto + container_socket_proxy_container_additional_networks_custom }}"
+container_socket_proxy_container_additional_networks_auto: []
+container_socket_proxy_container_additional_networks_custom: []
+
+# container_socket_proxy_labels_additional_labels contains a multiline string with additional labels to add to the container label file.
+# See `../templates/labels.j2` for details.
+#
+# Example:
+# container_socket_proxy_labels_additional_labels: |
+#   my.label=1
+#   another.label="here"
+container_socket_proxy_labels_additional_labels: ''
+
+# A list of extra arguments to pass to the container
+container_socket_proxy_container_extra_arguments: []
+
+# List of systemd services that the Container Socket Proxy systemd service depends on
+container_socket_proxy_systemd_required_services_list: "{{ container_socket_proxy_systemd_required_services_list_default + container_socket_proxy_systemd_required_services_list_auto + container_socket_proxy_systemd_required_services_list_custom }}"
+container_socket_proxy_systemd_required_services_list_default: "{{ [devture_systemd_docker_base_docker_service_name] if devture_systemd_docker_base_docker_service_name else [] }}"
+container_socket_proxy_systemd_required_services_list_auto: []
+container_socket_proxy_systemd_required_services_list_custom: []
+
+# List of systemd services that the Container Socket Proxy systemd service wants
+container_socket_proxy_systemd_wanted_services_list: []
+
+# Specifies the container socket path on the host
+container_socket_proxy_container_socket_path: /var/run/docker.sock
+
+# Controls whether write access (POST) is enabled for all APIs.
+# By default, the enabled APIs are read-only.
+container_socket_proxy_write_access_enabled: false
+
+# Controls the auth APIs by toggling the `AUTH` environment variable.
+# Warning: this is security-critical: https://github.com/Tecnativa/docker-socket-proxy#security-critical
+container_socket_proxy_api_auth_enabled: false
+
+# Controls the build APIs by toggling the `BUILD` environment variable.
+container_socket_proxy_api_build_enabled: false
+
+# Controls the commit APIs by toggling the `COMMIT` environment variable.
+container_socket_proxy_api_commit_enabled: false
+
+# Controls the configs APIs by toggling the `CONFIGS` environment variable.
+container_socket_proxy_api_configs_enabled: false
+
+# Controls the containers APIs by toggling the `CONTAINERS` environment variable.
+container_socket_proxy_api_containers_enabled: false
+
+# Controls the distribution APIs by toggling the `DISTRIBUTION` environment variable.
+container_socket_proxy_api_distribution_enabled: false
+
+# Controls the events APIs by toggling the `EVENTS` environment variable.
+container_socket_proxy_api_events_enabled: true
+
+# Controls the exec APIs by toggling the `EXEC` environment variable.
+container_socket_proxy_api_exec_enabled: false
+
+# Controls the GRPC APIs by toggling the `GRPC` environment variable.
+container_socket_proxy_api_grpc_enabled: false
+
+# Controls the images APIs by toggling the `IMAGES` environment variable.
+container_socket_proxy_api_images_enabled: false
+
+# Controls the info APIs by toggling the `INFO` environment variable.
+container_socket_proxy_api_info_enabled: false
+
+# Controls the network APIs by toggling the `NETWORKS` environment variable.
+container_socket_proxy_api_network_enabled: false
+
+# Controls the nodes APIs by toggling the `NODES` environment variable.
+container_socket_proxy_api_nodes_enabled: false
+
+# Controls the ping APIs by toggling the `PING` environment variable.
+container_socket_proxy_api_ping_enabled: true
+
+# Controls the plugins APIs by toggling the `PLUGINS` environment variable.
+container_socket_proxy_api_plugins_enabled: false
+
+# Controls the secrets APIs by toggling the `SECRETS` environment variable.
+# Warning: this is security-critical: https://github.com/Tecnativa/docker-socket-proxy#security-critical
+container_socket_proxy_api_secrets_enabled: false
+
+# Controls the services APIs by toggling the `SERVICES` environment variable.
+container_socket_proxy_api_services_enabled: false
+
+# Controls the session APIs by toggling the `SESSION` environment variable.
+container_socket_proxy_api_session_enabled: false
+
+# Controls the swarm APIs by toggling the `SWARM` environment variable.
+container_socket_proxy_api_swarm_enabled: false
+
+# Controls the system APIs by toggling the `SYSTEM` environment variable.
+container_socket_proxy_api_system_enabled: false
+
+# Controls the tasks APIs by toggling the `TASKS` environment variable.
+container_socket_proxy_api_tasks_enabled: false
+
+# Controls the version APIs by toggling the `VERSION` environment variable.
+container_socket_proxy_api_version_enabled: true
+
+# Controls the volumes APIs by toggling the `VOLUMES` environment variable.
+container_socket_proxy_api_volumes_enabled: false
+
+# container_socket_proxy_environment_variables holds a string with environment variable to pass to the container.
+#
+# Example:
+# container_socket_proxy_environment_variables: |
+#   NETWORKS=1
+#   SESSION=1
+container_socket_proxy_environment_variables: ''

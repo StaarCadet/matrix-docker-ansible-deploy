@@ -1,0 +1,8 @@
+---
+- name: Ensure podman-compose package is installed
+  package:
+    name: podman-compose
+    state: present
+  notify: restart podman
+  ignore_errors: "{{ ansible_check_mode }}"
+  when: ansible_os_family == 'RedHat'

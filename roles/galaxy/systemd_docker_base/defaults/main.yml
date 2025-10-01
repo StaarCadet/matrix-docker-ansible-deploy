@@ -1,0 +1,56 @@
+---
+
+devture_systemd_docker_base_systemd_path: "/etc/systemd/system"
+
+# Specifies the path to use for the `HOME` environment variable for systemd unit files.
+# Podman CLI also respects HOME environment, so we set it here.
+devture_systemd_docker_base_systemd_unit_home_path: /root
+
+# Command prefix for the container runtime CLI.
+# Switching from Docker CLI to Podman CLI
+devture_systemd_docker_base_host_command_docker: "/usr/bin/env podman"
+devture_systemd_docker_base_host_command_sh: "/usr/bin/env sh"
+devture_systemd_docker_base_host_command_systemctl: "/usr/bin/env systemctl"
+
+# Controls whether to enable IPv6 for all Podman container networks used by the various services.
+#
+# Podman creates container networks similarly to Docker.
+# The default value remains false.
+#
+# Changing this subsequently will NOT adjust existing container networks.
+# When changing, consider:
+# - stopping all services
+# - deleting all container networks: `podman network rm $(podman network ls -q)`
+# - re-running the playbook fully
+devture_systemd_docker_base_ipv6_enabled: false
+
+# Controls whether to enable IPv6 in Podman network daemon options (if applicable).
+# Podman uses CNI plugins for networking, IPv6 support depends on CNI config.
+# Adjust CNI config manually or via playbook if needed.
+devture_systemd_docker_base_ipv6_daemon_options_changing_enabled: false
+
+# Controls the driver options used when creating/updating container networks.
+# Podman supports similar options via CNI plugin configs or network create flags.
+devture_systemd_docker_base_container_networks_driver_options: "{{ devture_systemd_docker_base_container_networks_driver_options_auto | combine(devture_systemd_docker_base_container_networks_driver_options_custom, recursive=True) }}"
+devture_systemd_docker_base_container_networks_driver_options_auto: {}
+devture_systemd_docker_base_container_networks_driver_options_custom: {}
+
+# The name of the container runtime service that other services will depend on.
+# For Podman socket-activated service:
+devture_systemd_docker_base_docker_service_name: podman.service
+
+# Specifies how various roles will interact with the container system when it comes to pulling images, creating networks, etc.
+# Valid options: ansible-module, command
+devture_systemd_docker_base_container_system_interaction_method: ansible-module
+
+# Specifies how various roles will pull the image.
+# Valid options: ansible-module, command
+devture_systemd_docker_base_container_image_pull_method: "{{ devture_systemd_docker_base_container_system_interaction_method }}"
+
+# Specifies how various roles will create container networks.
+# Valid options: ansible-module, command
+devture_systemd_docker_base_container_network_creation_method: "{{ devture_systemd_docker_base_container_system_interaction_method }}"
+
+# Specifies how long to give to the container stopping process (podman stop --time=X CONTAINER) to run gracefully, before killing the container.
+# Podman supports similar stop time as Docker.
+devture_systemd_docker_base_container_stop_grace_time_seconds: 3

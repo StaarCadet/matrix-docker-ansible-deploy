@@ -1,0 +1,32 @@
+---
+- name: Get list of RPM files from custom repo directory
+  find:
+    paths: /opt/matrix/repos/matrix
+    patterns: '*.rpm'
+  register: rpm_files
+
+- name: Extract package names from RPM filenames
+  set_fact:
+    pkg_names: "{{ rpm_files.files | map(attribute='path') | map('basename') | map('regex_replace', '-[0-9].*$', '') | list }}"
+
+- name: Gather installed packages facts
+  package_facts:
+    manager: auto
+
+- name: Check that all required packages from custom repo are installed
+  assert:
+    that:
+      - "'{{ item }}' in ansible_facts.packages"
+    fail_msg: "Package '{{ item }}' from custom repo is NOT installed!"
+  loop: "{{ pkg_names }}"
+
+- name: Check Podman connectivity
+  shell: podman container ls
+  register: podman_info
+  failed_when: podman_info is undefined
+
+- name: Assert Podman is responsive
+  assert:
+    that:
+      - podman_info is defined
+    fail_msg: "Podman does not appear to be responsive or containers.podman cannot connect."
